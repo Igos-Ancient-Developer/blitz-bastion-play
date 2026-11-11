@@ -1,18 +1,18 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111150547';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111150547';
-import { Api, errText, inTelegram } from './api.js?v=20261111150547';
-import { Battle, VIEW } from './battle.js?v=20261111150547';
-import { PAYIC } from './payic.js?v=20261111150547';
-import { openChest } from './chest3d.js?v=20261111150547';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111150547';
-import { Sfx } from './audio.js?v=20261111150547';
-import { Ads } from './ads.js?v=20261111150547';
-import { step } from './track.js?v=20261111150547';                                             // воронка новичка: supabase/blitz_funnel.sql
-import { PAY } from './config.js?v=20261111150547';
-import { placeText, pyramidSvg } from './place.js?v=20261111150547';
-import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111150547';   // язык — по Telegram/браузеру, сменить — в настройках
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111150547';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111151953';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111151953';
+import { Api, errText, inTelegram } from './api.js?v=20261111151953';
+import { Battle, VIEW } from './battle.js?v=20261111151953';
+import { PAYIC } from './payic.js?v=20261111151953';
+import { openChest } from './chest3d.js?v=20261111151953';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111151953';
+import { Sfx } from './audio.js?v=20261111151953';
+import { Ads } from './ads.js?v=20261111151953';
+import { step } from './track.js?v=20261111151953';                                             // воронка новичка: supabase/blitz_funnel.sql
+import { PAY, SUPABASE_URL } from './config.js?v=20261111151953';
+import { placeText, pyramidSvg } from './place.js?v=20261111151953';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111151953';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111151953';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -437,7 +437,7 @@ async function marketScreen() {
 
 // ───────── магазин ─────────
 function shopScreen() {
-  step('shop');
+  step('shop'); setTimeout(() => { PACKS.forEach(p => prefetchInvoice(p.id)); warmPay(); }, 400);   // счета готовы до нажатия — окно оплаты открывается сразу
   const m = S.me;
   app.innerHTML = frame(`<div class="content"><div class="title"><h1 class="tx">Магазин</h1></div>
     <h2 class="tx">Самоцветы</h2>
@@ -489,7 +489,7 @@ function buyQty({ item, name, img, price, desc = '', done }) {
 // Окно «Пополнение» (как в Mortis Game): Telegram Stars, кошелёк TON, Crypto Bot, xRocket (GRAM/TON или USDT), подарок Telegram
 // и ссылка «Нет звёзд? Купи за ₽ по СБП». Выключенные способы (нет ключей на сервере) не показываются.
 function payModal(pack, onPaid) {
-  step('pay_open');
+  step('pay_open'); prefetchInvoice(pack); warmPay();
   const P = pack === 'starter' ? STARTER : PACKS.find(p => p.id === pack), usd = PACK_USD[pack];
   const amount = pack === 'starter' ? STARTER.prisms : Math.round(P.prisms * (1 + P.bonus / 100));
   const row = (id, pic, name, sub, price) => `<button class="payrow" data-m="${id}"><span class="pic">${pic}</span><span class="pn"><b>${name}</b>${sub ? `<small>${sub}</small>` : ''}</span><span class="pp">${price} ›</span></button>`;
@@ -506,11 +506,11 @@ function payModal(pack, onPaid) {
   md.el.querySelectorAll('[data-m]').forEach(b => b.onclick = async () => {
     const m = b.dataset.m;
     step('pay_' + m);
-    if (m === 'stars') { md.close(); return buyPack(pack, onPaid); }
+    if (m === 'stars') { md.close(); return buyPack(pack, onPaid); }      // ссылка уже готовится с открытия окна
     if (m === 'gift') return note('Отправь подарок Telegram боту игры — его стоимость зачислится самоцветами');
     if (!inTelegram) return note('Оплата доступна в Telegram');
     const asset = await askAsset(m); if (!asset) return;
-    b.disabled = true; const r = await Api.cryptoInvoice(pack, m, asset); b.disabled = false;
+    b.disabled = true; b.classList.add('busy'); const r = await Api.cryptoInvoice(pack, m, asset); b.disabled = false; b.classList.remove('busy');
     if (r.error) return note(errText(r.error));
     md.close();
     if (m === 'ton') await payTon(r);
@@ -555,9 +555,30 @@ async function waitCredit(onPaid, tonOrder) {
     if (p.ok && p.prisms > before) { setMe(p); onPaid?.(); render(); toast(`+${p.prisms - before} самоцветов!`, '#ff8ad8'); return; }
   }
 }
+// Окно оплаты без задержки: ссылка на счёт Stars создаётся заранее (при входе в магазин и открытии окна «Пополнение») и живёт 10 мин;
+// крипто-функция и TON Connect прогреваются заранее, чтобы нажатие сразу открывало оплату.
+const invCache = {};
+function prefetchInvoice(pack) {
+  if (!inTelegram || !TG?.openInvoice) return null;
+  if (pack === 'starter' && S.starter) return null;
+  const c = invCache[pack];
+  if (c && Date.now() - c.at < 600000) return c.p;
+  const p = Api.invoice(pack).catch(() => ({ error: 'network' }));
+  invCache[pack] = { p, at: Date.now() };
+  p.then(r => { if (!r?.link) delete invCache[pack]; });
+  return p;
+}
+let warmed = 0;
+function warmPay() {
+  if (!inTelegram || Date.now() - warmed < 120000) return;
+  warmed = Date.now();
+  if (PAY.ton || PAY.cryptobot || PAY.xrocket) fetch(`${SUPABASE_URL}/functions/v1/bb-crypto-invoice`, { method: 'OPTIONS' }).catch(() => {});
+  if (PAY.ton) { fetch(`${SUPABASE_URL}/functions/v1/bb-ton-verify`, { method: 'OPTIONS' }).catch(() => {}); import('https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.0.9/+esm').catch(() => {}); }
+}
 async function buyPack(pack, onPaid) {
   if (!inTelegram || !TG?.openInvoice) return note('Покупка самоцветов работает в Telegram');
-  const r = await Api.invoice(pack);
+  const slow = setTimeout(() => note('Открываем оплату…'), 350);
+  const r = await (prefetchInvoice(pack) || Api.invoice(pack)); clearTimeout(slow); delete invCache[pack];
   if (!r.link) { step('pay_err'); return note(errText(r.error)); }
   const before = S.me.prisms;
   TG.openInvoice(r.link, async status => {

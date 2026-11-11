@@ -1538,3 +1538,8 @@ html.lang-hi .tx, html.lang-zh .tx, html.lang-ja .tx { letter-spacing: 0; }
 .skreset .ic { width: 20px; height: 20px; vertical-align: -4px; }
 .mava, .ava { color: #3a2210; font-weight: 900; }
 .lfoot .owntag { width: 100%; flex-direction: row; } .owntag small { font: 700 11px Nunito, sans-serif; color: #e2c48c; margin-left: 4px; }
+
+/* окно оплаты: кнопка способа ждёт счёт — видно, что нажатие принято */
+.payrow.busy { opacity: .6; pointer-events: none; }
+.payrow.busy .pp { animation: paywait .8s ease-in-out infinite alternate; }
+@keyframes paywait { from { opacity: .3 } to { opacity: 1 } }
