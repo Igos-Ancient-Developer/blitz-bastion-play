@@ -1,10 +1,10 @@
 // 3D-открытие сундука (three.js). Если есть models/chest_<вид>.glb с узлами lid/body — берём модель, иначе строим мультяшный сундук сами.
 // Сценарий: падение с отскоком → 3 удара (тряска, накал) → вспышка и луч цвета редкости → добыча вылетает по одной (касание — дальше) → итог.
-import * as THREE from './vendor/three.module.min.js?v=20261111110834';
-import { TOWER_DEFS, RARITIES, BOOSTERS, CHESTS, GRADES } from './data.js?v=20261111110834';
-import { cardImg, uiImg } from './sprites.js?v=20261111110834';
-import { Sfx } from './audio.js?v=20261111110834';
-import { h, esc, fmt, fmtShort, ic, cardHTML, fitCards } from './ui.js?v=20261111110834';
+import * as THREE from './vendor/three.module.min.js?v=20261111112641';
+import { TOWER_DEFS, RARITIES, BOOSTERS, CHESTS, GRADES } from './data.js?v=20261111112641';
+import { cardImg, uiImg } from './sprites.js?v=20261111112641';
+import { Sfx } from './audio.js?v=20261111112641';
+import { h, esc, fmt, fmtShort, ic, cardHTML, fitCards } from './ui.js?v=20261111112641';
 
 const COL = { common: 0xb8c2cf, magic: 0x3d8bff, legend: 0xffb020, weekly: 0xff2d7a };
 const WOOD = { common: 0x9b5f2c, magic: 0x2d4fa8, legend: 0xc77a12, weekly: 0x5a0f2a };
