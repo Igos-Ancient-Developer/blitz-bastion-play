@@ -1,17 +1,18 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111144802';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111144802';
-import { Api, errText, inTelegram } from './api.js?v=20261111144802';
-import { Battle, VIEW } from './battle.js?v=20261111144802';
-import { PAYIC } from './payic.js?v=20261111144802';
-import { openChest } from './chest3d.js?v=20261111144802';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111144802';
-import { Sfx } from './audio.js?v=20261111144802';
-import { Ads } from './ads.js?v=20261111144802';
-import { PAY } from './config.js?v=20261111144802';
-import { placeText, pyramidSvg } from './place.js?v=20261111144802';
-import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111144802';   // язык — по Telegram/браузеру, сменить — в настройках
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111144802';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111145957';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111145957';
+import { Api, errText, inTelegram } from './api.js?v=20261111145957';
+import { Battle, VIEW } from './battle.js?v=20261111145957';
+import { PAYIC } from './payic.js?v=20261111145957';
+import { openChest } from './chest3d.js?v=20261111145957';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111145957';
+import { Sfx } from './audio.js?v=20261111145957';
+import { Ads } from './ads.js?v=20261111145957';
+import { step } from './track.js?v=20261111145957';                                             // воронка новичка: supabase/blitz_funnel.sql
+import { PAY } from './config.js?v=20261111145957';
+import { placeText, pyramidSvg } from './place.js?v=20261111145957';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111145957';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111145957';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -56,6 +57,7 @@ async function boot() {
   bar.style.width = '65%';
   const me = await Api.profile();
   bar.style.width = '100%';
+  step(me.error ? 'err_' + String(me.error).replace(/[^a-z0-9_]/gi, '').toLowerCase().slice(0, 18) : 'loaded');
   if (me.error) { app.innerHTML = `<div class="screen loading"><div class="bg"></div><h2 class="tx center">Нет связи</h2><div class="parch">${esc(errText(me.error))}</div><button class="btn" onclick="location.reload()">${bic('retry')}Повторить</button></div>`; return; }
   S.me = me;
   render();
@@ -91,6 +93,7 @@ function bindCommon(root) {
   root.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
 }
 function go(where) {
+  step(where);
   if (where === 'profile') { S.tab = 'profile'; return render(); }
   if (where === 'shop') { S.tab = 'shop'; return render(); }
   if (where === 'skills') { S.tab = 'skills'; return render(); }
@@ -183,7 +186,7 @@ function rankRow(r) {
     return `<div class="rslot r-${d.rarity}" title="${esc(d.name)}"><img src="${cardImg(c.card)}" alt="" loading="lazy">${gradeStars(c.grade || 0)}<b class="num">${c.lvl || 1}</b></div>`; }).join('')
     : '<span class="rnone">колода неизвестна — рекорд поставлен до обновления</span>';
   return `<div class="rwrap${r.me ? ' me' : ''}${r.rank <= 3 ? ' top' + r.rank : ''}">
-    <button class="rrow" type="button"><span class="rk num">${r.rank}</span><span class="ava">${r.avatar ? `<img src="${esc(r.avatar)}" alt="">` : esc((r.name || '?')[0])}</span>
+    <button class="rrow" type="button"><span class="rk num">${r.rank}</span><span class="ava">${avaImg(r.avatar, r.name)}</span>
       <span class="nm"><b>${esc(r.name)}</b>${r.username ? `<small>@${esc(r.username)}</small>` : r.lvl ? `<small>ур. ${r.lvl}</small>` : ''}</span>
       <span class="sc num">${fmt(r.score)}</span><i class="rarr"></i></button>
     <div class="rmore"><div class="rin"><div class="rslots">${slots}</div>
@@ -361,7 +364,9 @@ async function sellModal(c) {
 // ───────── рынок ─────────
 const tgLink = u => `https://t.me/${u}`;
 const cur = (c, n) => `<span class="price">${ic(c === 'stars' ? 'ic_star' : 'ic_prism')}${fmtShort(n)}</span>`;
-const sellerAva = l => `<span class="mava">${l.avatar ? `<img src="${esc(l.avatar)}" alt="">` : esc((l.seller || '?')[0])}</span>`;
+const sellerAva = l => `<span class="mava">${avaImg(l.avatar, l.seller)}</span>`;
+// аватар игрока: фото из Telegram, а если оно не открылось (ссылка устарела, нет доступа) — первая буква имени, а не тёмный квадрат
+function avaImg(url, name) { const L = esc((name || '?').trim()[0] || '?').toUpperCase(); return url ? `<img src="${esc(url)}" alt="" onerror="this.replaceWith(document.createTextNode('${L}'))">` : L; }
 function sellerBox(l) {
   return `<div class="seller">${sellerAva(l)}<div><b>${esc(l.seller)}</b>${l.tg ? `<a class="tgn" data-tg="${esc(l.tg)}">@${esc(l.tg)}</a>` : '<span class="tgn dim">без @ника</span>'}</div></div>`;
 }
@@ -379,6 +384,7 @@ async function buyLot(l, md) {
   if (r) { Sfx.play('reveal', 3); toast('КАРТА ТВОЯ!', '#7dff6a'); }
 }
 function lotModal(l, mine) {
+  mine = mine || l.sellerId === S.me.id;
   const md = modal(`<div class="col" style="align-items:center;gap:10px">${cardHTML(l.card, { big: true, lvl: l.lvl, grade: l.grade || 0 })}
     ${mine ? `<div class="acts"><button class="btn gray" id="lotbuy">${bic('cancel')}Снять с продажи</button></div>`
       : `<div class="lotbuy">${sellerBox(l)}<button class="btn ${l.sellerId === S.me.id ? 'gray' : 'green buy'}" id="lotbuy">Купить ${cur(l.cur, l.price)}</button></div>`}</div>`);
@@ -387,6 +393,7 @@ function lotModal(l, mine) {
   md.el.querySelector('#lotbuy').onclick = async () => { if (mine) { md.close(); await act(Api.cancel(l.listing), 'Лот снят'); } else buyLot(l, md); };
 }
 async function marketScreen() {
+  step('market');
   const mode = S.mkMode === 'mine' ? 'mine' : 'buy', fr = S.mkRar || null, fg = S.mkGrade ?? null, q = (S.mkQ || '').trim().toLowerCase();
   const nf = (fr ? 1 : 0) + (fg != null ? 1 : 0);
   app.innerHTML = frame(`<div class="content"><div class="title"><h1 class="tx">Рынок</h1></div>
@@ -401,11 +408,11 @@ async function marketScreen() {
   const box = $('#lots');
   if (mode === 'mine') {
     const mine = S.me.cards.filter(c => c.listed);
-    box.innerHTML = mine.map(c => `<div class="lot" data-uid="${c.id}"><div class="lc">${cardHTML(c.card, { mini: true, lvl: c.lvl, grade: c.grade || 0 })}</div><button class="pricebtn own">${cur(c.cur, c.price)}</button><button class="linkbtn">Снять</button></div>`).join('') || '<div class="tx small dim" style="grid-column:1/-1;text-align:center">Лотов нет. Выставить карту можно из рюкзака.</div>';
+    box.innerHTML = mine.map(c => `<div class="lot" data-uid="${c.id}"><div class="lc">${cardHTML(c.card, { mini: true, lvl: c.lvl, grade: c.grade || 0 })}</div><div class="ownfoot"><span class="owntag">${cur(c.cur, c.price)}</span><button class="btn sm gray ownoff">Снять</button></div></div>`).join('') || '<div class="tx small dim" style="grid-column:1/-1;text-align:center">Лотов нет. Выставить карту можно из рюкзака.</div>';
     box.querySelectorAll('[data-uid]').forEach(el => {
       const c = S.me.cards.find(x => x.id === el.dataset.uid);
       el.querySelector('.lc').onclick = () => lotModal({ card: c.card, lvl: c.lvl, grade: c.grade, price: c.price, cur: c.cur, listing: c.listing }, true);
-      el.querySelector('.linkbtn').onclick = async () => { await act(Api.cancel(c.listing), 'Лот снят'); };
+      el.querySelector('.ownoff').onclick = async () => { await act(Api.cancel(c.listing), 'Лот снят'); };
     });
     return;
   }
@@ -421,8 +428,8 @@ async function marketScreen() {
     const s = (mq.value || '').trim().toLowerCase(); S.mkQ = mq.value;
     const list = lots.filter(l => (!fr || l.rarity === fr) && (fg == null || (l.grade || 0) === fg) && (!s || TOWER_DEFS[l.card].name.toLowerCase().includes(s) || (l.seller || '').toLowerCase().includes(s) || (l.tg || '').toLowerCase().includes(s)));
     box.innerHTML = list.map(l => `<div class="lot" data-id="${l.id}"><div class="lc">${cardHTML(l.card, { mini: true, lvl: l.lvl, grade: l.grade || 0 })}</div>
-      <div class="lfoot"><div class="seller sm">${sellerAva(l)}<div><b>${esc(l.seller)}</b>${l.tg ? `<span class="tgn">@${esc(l.tg)}</span>` : ''}</div></div><button class="pricebtn buyb${l.sellerId === S.me.id ? ' own' : ''}">${cur(l.cur, l.price)}</button></div></div>`).join('') || '<div class="tx small dim" style="grid-column:1/-1;text-align:center">Ничего не найдено</div>';
-    box.querySelectorAll('[data-id]').forEach(el => { const l = lots.find(x => x.id === el.dataset.id); el.querySelector('.lc').onclick = () => lotModal(l); el.querySelector('.pricebtn').onclick = () => buyLot(l); });
+      <div class="lfoot"><div class="seller sm">${sellerAva(l)}<div><b>${esc(l.seller)}</b>${l.tg ? `<span class="tgn">@${esc(l.tg)}</span>` : ''}</div></div>${l.sellerId === S.me.id ? `<button class="owntag pricebtn-own">${cur(l.cur, l.price)}<small>твой лот</small></button>` : `<button class="pricebtn buyb">${cur(l.cur, l.price)}</button>`}</div></div>`).join('') || '<div class="tx small dim" style="grid-column:1/-1;text-align:center">Ничего не найдено</div>';
+    box.querySelectorAll('[data-id]').forEach(el => { const l = lots.find(x => x.id === el.dataset.id); el.querySelector('.lc').onclick = () => lotModal(l); el.querySelector('.pricebtn, .owntag').onclick = () => (l.sellerId === S.me.id ? lotModal(l) : buyLot(l)); });
   };
   mq.oninput = () => { clearTimeout(mq._t); mq._t = setTimeout(draw, 160); };
   draw();
@@ -430,6 +437,7 @@ async function marketScreen() {
 
 // ───────── магазин ─────────
 function shopScreen() {
+  step('shop');
   const m = S.me;
   app.innerHTML = frame(`<div class="content"><div class="title"><h1 class="tx">Магазин</h1></div>
     <h2 class="tx">Самоцветы</h2>
@@ -481,6 +489,7 @@ function buyQty({ item, name, img, price, desc = '', done }) {
 // Окно «Пополнение» (как в Mortis Game): Telegram Stars, кошелёк TON, Crypto Bot, xRocket (GRAM/TON или USDT), подарок Telegram
 // и ссылка «Нет звёзд? Купи за ₽ по СБП». Выключенные способы (нет ключей на сервере) не показываются.
 function payModal(pack, onPaid) {
+  step('pay_open');
   const P = pack === 'starter' ? STARTER : PACKS.find(p => p.id === pack), usd = PACK_USD[pack];
   const amount = pack === 'starter' ? STARTER.prisms : Math.round(P.prisms * (1 + P.bonus / 100));
   const row = (id, pic, name, sub, price) => `<button class="payrow" data-m="${id}"><span class="pic">${pic}</span><span class="pn"><b>${name}</b>${sub ? `<small>${sub}</small>` : ''}</span><span class="pp">${price} ›</span></button>`;
@@ -496,6 +505,7 @@ function payModal(pack, onPaid) {
   md.el.querySelector('[data-sbp]')?.addEventListener('click', () => TG?.openLink ? TG.openLink(PAY.sbpUrl) : window.open(PAY.sbpUrl, '_blank'));
   md.el.querySelectorAll('[data-m]').forEach(b => b.onclick = async () => {
     const m = b.dataset.m;
+    step('pay_' + m);
     if (m === 'stars') { md.close(); return buyPack(pack, onPaid); }
     if (m === 'gift') return note('Отправь подарок Telegram боту игры — его стоимость зачислится самоцветами');
     if (!inTelegram) return note('Оплата доступна в Telegram');
@@ -548,9 +558,10 @@ async function waitCredit(onPaid, tonOrder) {
 async function buyPack(pack, onPaid) {
   if (!inTelegram || !TG?.openInvoice) return note('Покупка самоцветов работает в Telegram');
   const r = await Api.invoice(pack);
-  if (!r.link) return note(errText(r.error));
+  if (!r.link) { step('pay_err'); return note(errText(r.error)); }
   const before = S.me.prisms;
   TG.openInvoice(r.link, async status => {
+    step(status === 'paid' ? 'paid' : 'pay_' + status);
     if (status !== 'paid') return;
     onPaid?.();
     note('Оплата прошла, начисляем…');
@@ -569,6 +580,7 @@ function chestsModal() {
   md.el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { md.close(); openChestKind(b.dataset.open); });
 }
 async function openChestKind(k) {
+  step('chest_open');
   const r = await Api.openChest(k, 1);
   if (r.error) return note(errText(r.error));
   setMe(r); const res = await openChest(k, r.items, { more: S.me.chests?.[k] || 0 }); render();
@@ -586,12 +598,12 @@ function weekClock(ends) { const ms = Math.max(0, new Date(ends) - Date.now()), 
 async function rankScreen() {
   app.innerHTML = frame(`<div class="content tourney"><div class="title"><h1 class="tx">Турнир недели</h1></div>
     <div class="tn-cd"><span>Итоги через</span><div class="tn-clock" id="tnc">…</div></div>
+    <div class="parch small tn-note">Очки недели — сумма лучших результатов по уровням кампании за эту неделю. В понедельник 00:00 UTC таблица обнуляется, призы приходят сами.</div>
     <div class="peds">${[2, 1, 3].map(p => { const z = WEEK_PRIZE[p], [ck, cn] = Object.entries(z.chests)[0];
       return `<div class="ped p${p}"><img class="ped-img" src="img/ui/kit6/ped_${p}.webp?v=1" alt=""><img class="ped-beam" src="img/ui/kit6/beam.webp?v=1" alt="">
         <div class="ped-top"><img class="ped-rays" src="img/ui/kit6/rays.webp?v=1" alt=""><img class="ped-chest" src="${uiImg('chest_' + ck)}" alt="">${cn > 1 ? `<b class="ped-x num">×${cn}</b>` : ''}</div>
         <span class="ped-n num">${p}</span>
         <div class="ped-cap"><span class="pzp">${ic('ic_prism')}<b class="num">+${z.prisms}</b></span><div class="pod-who" id="pw${p}"><b>—</b></div></div></div>`; }).join('')}</div>
-    <div class="parch small">Очки недели — сумма лучших результатов по уровням кампании за эту неделю. В понедельник 00:00 UTC таблица обнуляется, призы приходят сами.</div>
     <div class="list rlist" id="world"><div class="tx small dim center">Загрузка…</div></div></div>`);
   bindCommon(app);
   const nowU = new Date(), ends0 = Date.UTC(nowU.getUTCFullYear(), nowU.getUTCMonth(), nowU.getUTCDate() + ((8 - (nowU.getUTCDay() || 7)) % 7 || 7));
@@ -601,7 +613,7 @@ async function rankScreen() {
   r = await Api.week(100);
   const box = $('#world'); if (!box) return;
   if (r.error || !r.ok) { r = r0; box.innerHTML = '<div class="tx small dim center">Таблица недели скоро появится</div>'; return; }
-  for (let p = 1; p <= 3; p++) { const e = $('#pw' + p), w = r.top[p - 1]; if (e) e.innerHTML = w ? `<span class="ava">${w.avatar ? `<img src="${esc(w.avatar)}" alt="">` : esc((w.name || '?')[0])}</span><b>${esc(w.name)}</b><small class="num">${fmt(w.score)}</small>` : '<b>—</b>'; }
+  for (let p = 1; p <= 3; p++) { const e = $('#pw' + p), w = r.top[p - 1]; if (e) e.innerHTML = w ? `<span class="ava">${avaImg(w.avatar, w.name)}</span><b>${esc(w.name)}</b><small class="num">${fmt(w.score)}</small>` : '<b>—</b>'; }
   box.innerHTML = r.top.map(rankRow).join('') + (r.me && r.me.rank > r.top.length ? `<div class="tx center dim">…</div>${rankRow({ ...r.me, name: S.me.name, username: S.me.username, avatar: S.me.avatar, lvl: S.me.lvl, me: true })}` : '') || '<div class="tx small dim center">На этой неделе ещё никого — пройди уровень и займи первое место!</div>';
   bindRanks(box);
   weekPrizes(r.prizes);
@@ -670,7 +682,7 @@ function skillsScreen() {
     <div class="skcard"><span class="skic big">${skIcon(sel.id)}</span>
       <div class="grow"><b class="tx">${esc(sel.name)}</b> <span class="num dim">${st0.lv}/${sel.max}</span><p>${esc(sel.desc)}</p>${st0.locked ? `<small class="dim">Нужно: ${esc(SKILLS.find(x => x.id === sel.req[0]).name)} — ${sel.req[1]} ур.</small>` : ''}</div>
       <button class="btn green sm" id="learn" ${st0.can ? '' : 'disabled'}>${st0.max ? 'Максимум' : bic('learn') + 'Изучить'}</button></div>
-    <button class="linkbtn" id="reset">Сбросить навыки · 50 ${ic('ic_prism')}</button>
+    <button class="btn red skreset" id="reset">${bic('restart')}Сбросить все навыки · 50 ${ic('ic_prism')}</button>
   </div>`);
   bindCommon(app);
   $("#tobattle")?.addEventListener("click", () => { const L = S.afterSkills; S.afterSkills = null; S.tab = "battle"; render(); deckModal(L); });
@@ -696,6 +708,7 @@ function settingsModal() {
 
 // ───────── бой ─────────
 async function startBattle(L) {
+  step('b_start');
   const deck = deckCards(), w = L.world.id;
   const kinds = [...new Set(genWaves(L).flatMap(x => x.groups.map(g => ENEMY_DEFS[g.kind].sprite || g.kind)))];
   await preload([`img/level/ground_${w}.webp`, `img/level/road_${w}.webp`, `img/level/props_${w}1.webp`, `img/level/props_${w}2.webp`, `img/decor/${w}.webp`, `img/level/gate_${w}.webp`, `img/level/den_${w}.webp`, `img/level/mountain_${w}.webp`, `img/level/boulder_${w}.webp`, w === 'meadow' ? 'img/level/pad.webp' : `img/level/pad_${w}.webp`,
@@ -764,6 +777,7 @@ async function startBattle(L) {
 // Итог боя (как в Clash Royale): звёзды, шкала опыта заполняется (с переходом уровня), затем выпадение —
 // карточка переворачивается лицом или сундук падает с отскоком.
 async function endBattle(L, res, b) {
+  step(res.win ? 'b_win' : 'b_lose');
   const old = { lvl: S.me.lvl, xp: S.me.xp, next: S.me.xpNext };
   // оценка из 5 делений, каждое — пустое, наполовину или полное (шаг 0,5): победа даёт от 1 до 5 по сохранённым жизням,
   // поражение — до 2 делений за то, сколько волн выстояли
@@ -838,7 +852,7 @@ let adN = 0, adAt = 0;
 function adAsk(after) {
   const x = Math.random(), kind = x < 0.05 ? 'chest' : x < 0.3 ? 'booster' : 'prisms';
   if (!Ads.on(kind) || ++adN % 3 !== 0 || Date.now() - adAt < 180000) return false;
-  adAt = Date.now();
+  adAt = Date.now(); step('ad_show');
   const pic = kind === 'chest' ? uiImg('chest_common') : kind === 'booster' ? uiImg('boost/xp15_30') : uiImg('ic_prism');
   const txt = kind === 'chest' ? 'Обычный сундук' : kind === 'booster' ? 'Случайный бустер' : `${ic('ic_prism')} 1–3 самоцвета`;
   const md = modal(`<div class="panel col center adask"><div class="ribbon tx">Награда за рекламу</div><img class="adpic" src="${pic}" alt="">
@@ -848,7 +862,7 @@ function adAsk(after) {
   q('#adskip').onclick = () => { md.close(); after(); };
   q('#adgo').onclick = async () => {
     const b = q('#adgo'); if (b.disabled) return; b.disabled = true;
-    const res = await Ads.show(kind); b.disabled = false;
+    const res = await Ads.show(kind); b.disabled = false; step('ad_' + res);
     if (res !== 'done') return note(Ads.say(res));
     let r = null;
     for (let i = 0; i < 6; i++) { r = await Api.adClaim(kind); if (r.error !== 'ad_pending') break; await new Promise(f => setTimeout(f, 1500)); }   // подтверждение от AdsGram приходит за секунды
@@ -874,8 +888,9 @@ function maybeOffer() {
     <button class="btn green buy" id="ofbuy">Купить за ${PAYIC.star}${T.stars}</button><button class="btn gray" id="oflater">Позже</button></div>`);
   const q = s => md.el.querySelector(s), b = q('#ofbuy');
   b.style.pointerEvents = 'none'; setTimeout(() => { b.style.pointerEvents = ''; }, 900);
+  step('offer_show');
   q('#oflater').onclick = () => md.close();
-  b.onclick = () => { md.close(); payModal('starter', () => { S.starter = true; }); };
+  b.onclick = () => { step('offer_buy'); md.close(); payModal('starter', () => { S.starter = true; }); };
   return true;
 }
 

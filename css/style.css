@@ -1525,3 +1525,16 @@ html.lang-vi .tx, html.lang-vi h1, html.lang-vi h2, html.lang-vi h3, html.lang-v
 html.rtl body * { unicode-bidi: plaintext; }
 /* хинди, китайский, японский: системные шрифты, без разрядки */
 html.lang-hi .tx, html.lang-zh .tx, html.lang-ja .tx { letter-spacing: 0; }
+
+/* ── v8: рынок — свои лоты (ценник + «Снять»), турнир — пояснение над пьедесталами, заметная кнопка сброса навыков ── */
+.ownfoot { display: flex; align-items: center; gap: 6px; width: 100%; }
+.owntag { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 40px; border-radius: 12px;
+  background: linear-gradient(#4a2e1a, #2f1c0f); border: 2px solid #1b0f06; box-shadow: inset 0 0 0 1.5px #a8803f; }
+.owntag .price { display: inline-flex; align-items: center; gap: 4px; font: 900 16px Rubik, sans-serif; color: #fff; -webkit-text-stroke: 0; }
+.owntag .price img, .owntag .ic { width: 22px; height: 22px; }
+.ownfoot .btn.sm { --h: 40px; flex: none; min-width: 0; }
+.tn-note { margin: 0 0 6px; }
+.skreset { width: 100%; margin-top: 12px; }
+.skreset .ic { width: 20px; height: 20px; vertical-align: -4px; }
+.mava, .ava { color: #3a2210; font-weight: 900; }
+.lfoot .owntag { width: 100%; flex-direction: row; } .owntag small { font: 700 11px Nunito, sans-serif; color: #e2c48c; margin-left: 4px; }

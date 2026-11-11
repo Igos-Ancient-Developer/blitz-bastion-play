@@ -1,6 +1,6 @@
 // Связь с сервером: функции bb_* в Supabase (supabase/blitz.sql).
 // В Telegram игрок определяется подписью initData, вне Telegram — анонимной сессией Supabase Auth (токены в localStorage).
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261111144802';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261111145957';
 
 const TG = window.Telegram?.WebApp;
 export const initData = TG?.initData || '';
