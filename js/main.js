@@ -1,18 +1,18 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111145957';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111145957';
-import { Api, errText, inTelegram } from './api.js?v=20261111145957';
-import { Battle, VIEW } from './battle.js?v=20261111145957';
-import { PAYIC } from './payic.js?v=20261111145957';
-import { openChest } from './chest3d.js?v=20261111145957';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111145957';
-import { Sfx } from './audio.js?v=20261111145957';
-import { Ads } from './ads.js?v=20261111145957';
-import { step } from './track.js?v=20261111145957';                                             // воронка новичка: supabase/blitz_funnel.sql
-import { PAY } from './config.js?v=20261111145957';
-import { placeText, pyramidSvg } from './place.js?v=20261111145957';
-import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111145957';   // язык — по Telegram/браузеру, сменить — в настройках
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111145957';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111150547';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111150547';
+import { Api, errText, inTelegram } from './api.js?v=20261111150547';
+import { Battle, VIEW } from './battle.js?v=20261111150547';
+import { PAYIC } from './payic.js?v=20261111150547';
+import { openChest } from './chest3d.js?v=20261111150547';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111150547';
+import { Sfx } from './audio.js?v=20261111150547';
+import { Ads } from './ads.js?v=20261111150547';
+import { step } from './track.js?v=20261111150547';                                             // воронка новичка: supabase/blitz_funnel.sql
+import { PAY } from './config.js?v=20261111150547';
+import { placeText, pyramidSvg } from './place.js?v=20261111150547';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111150547';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111150547';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
