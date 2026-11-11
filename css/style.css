@@ -1548,3 +1548,5 @@ html.lang-hi .tx, html.lang-zh .tx, html.lang-ja .tx { letter-spacing: 0; }
 .mknote { margin: 0 0 10px; text-align: center; }
 .mknote { margin-bottom: 6px; }
 .mkact { display: flex; justify-content: center; margin: 0 0 10px; }
+.mkhint { margin-top: 14px; }
+.nohints .hint { display: none !important; }

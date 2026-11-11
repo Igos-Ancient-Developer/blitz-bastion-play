@@ -1,18 +1,18 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111200246';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111200246';
-import { Api, errText, inTelegram } from './api.js?v=20261111200246';
-import { Battle, VIEW } from './battle.js?v=20261111200246';
-import { PAYIC } from './payic.js?v=20261111200246';
-import { openChest } from './chest3d.js?v=20261111200246';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111200246';
-import { Sfx } from './audio.js?v=20261111200246';
-import { Ads } from './ads.js?v=20261111200246';
-import { step } from './track.js?v=20261111200246';                                             // воронка новичка: supabase/blitz_funnel.sql
-import { PAY, SUPABASE_URL } from './config.js?v=20261111200246';
-import { placeText, pyramidSvg } from './place.js?v=20261111200246';
-import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111200246';   // язык — по Telegram/браузеру, сменить — в настройках
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111200246';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111201213';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111201213';
+import { Api, errText, inTelegram } from './api.js?v=20261111201213';
+import { Battle, VIEW } from './battle.js?v=20261111201213';
+import { PAYIC } from './payic.js?v=20261111201213';
+import { openChest } from './chest3d.js?v=20261111201213';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111201213';
+import { Sfx } from './audio.js?v=20261111201213';
+import { Ads } from './ads.js?v=20261111201213';
+import { step } from './track.js?v=20261111201213';                                             // воронка новичка: supabase/blitz_funnel.sql
+import { PAY, SUPABASE_URL } from './config.js?v=20261111201213';
+import { placeText, pyramidSvg } from './place.js?v=20261111201213';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111201213';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111201213';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -20,7 +20,7 @@ const S = { me: null, tab: 'battle', battle: null, settings: loadSettings() };
 const TABS = [['shop', 'Магазин', 'ic_shop'], ['bag', 'Рюкзак', 'ic_backpack'], ['battle', 'Бой', 'ic_sword'], ['market', 'Рынок', 'ic_market'], ['rank', 'Рейтинг', 'ic_crown']];
 
 function loadSettings() { try { return { sound: true, ...JSON.parse(localStorage.getItem('bb_settings') || '{}') }; } catch { return { sound: true }; } }
-function saveSettings() { try { localStorage.setItem('bb_settings', JSON.stringify(S.settings)); } catch {} Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false; }
+function saveSettings() { try { localStorage.setItem('bb_settings', JSON.stringify(S.settings)); } catch {} Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false; document.documentElement.classList.toggle('nohints', S.settings.hints === false); }
 
 // Полный экран в Telegram (как в Baalgor, blood-keep/js/tg.js): сразу на весь экран и отступы под кнопки Telegram сверху
 // (safeAreaInset + contentSafeAreaInset → --safe-top/--safe-bot; вне Telegram остаются env() из style.css).
@@ -42,7 +42,7 @@ function tgFullscreen() {
 async function boot() {
   await initLang(pickLang());                                                   // язык интерфейса: до построения экранов
   if (TG) { TG.ready(); TG.expand(); TG.disableVerticalSwipes?.(); TG.setHeaderColor?.('#2f6db8'); TG.setBackgroundColor?.('#2f6db8'); tgFullscreen(); }
-  Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false;
+  Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false; document.documentElement.classList.toggle('nohints', S.settings.hints === false);
   press(document.body);
   // картинка ещё не сгенерирована — прячем, а не показываем системный «битый» значок
   // картинки нет: если указан запасной вариант (data-fb) — подставляем его, иначе прячем
@@ -276,7 +276,7 @@ function bagScreen() {
   app.innerHTML = frame(`<div class="content${selM ? ' selmode' : ''}"><div class="title row"><h1 class="tx grow">Рюкзак</h1><button class="btn ${selM ? 'gray' : 'purple'} sm" id="selm">${selM ? bic('cancel') + 'Отмена' : bic('dust') + 'Распылить'}</button></div>
     <div class="chips">${tabs.map(([id, n]) => `<button class="chip ${f === id ? 'on' : ''}" data-f="${id}">${n}</button>`).join('')}</div>
     <div class="baggrid">${cells.join('') || '<div class="tx small dim">Пусто</div>'}</div>
-    <div class="parch small" style="margin-top:14px">Одинаковые карты складываются в стопку. Лишние можно продать на рынке или <b>распылить</b> за самоцветы. Качество карты: простая, <b>улучшенная</b> (+15% к силе) и <b>уникальная</b> (+30%).</div>
+    <div class="parch small hint" style="margin-top:14px">Одинаковые карты складываются в стопку. Лишние можно продать на рынке или <b>распылить</b> за самоцветы. Качество карты: простая, <b>улучшенная</b> (+15% к силе) и <b>уникальная</b> (+30%).</div>
   </div>`);
   bindCommon(app);
   app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.bagFilter = b.dataset.f; render(); });
@@ -307,7 +307,7 @@ async function dustFlow(cards, one = null) {
         ${o.ups.map(u => `<div class="od">${gradeStars(Math.min(2, u.from + 1))}<div class="ot"><b>${esc(TOWER_DEFS[u.card].name)}</b><span>на звезду лучше</span></div><i>${pct(u.p1)}</i></div>${u.p2 ? `<div class="od">${gradeStars(2)}<div class="ot"><b>${esc(TOWER_DEFS[u.card].name)}</b><span>сразу 3 звезды</span></div><i>${pct(u.p2)}</i></div>` : ''}`).join('')}
         <div class="od"><img class="ic" src="${uiImg('chest_' + o.chest)}" alt=""><div class="ot"><b>${esc(CHESTS[o.chest].name)}</b><span>очень редко</span></div><i>${pct(o.pChest)}</i></div>
       </div>
-      <div class="parch small dnote">Чем больше карт распыляешь за раз, тем выше шанс на самоцветы и сундук. 3+ одинаковые карты дают шанс на карту качеством выше.</div>
+      <div class="parch small dnote hint">Чем больше карт распыляешь за раз, тем выше шанс на самоцветы и сундук. 3+ одинаковые карты дают шанс на карту качеством выше.</div>
       <div class="row dbtns"><button class="btn gray" data-a="no">${bic('cancel')}Отмена</button>${one && list.length > 1 ? `<button class="btn blue" data-a="one">${bic('one')}Только 1</button>` : ''}<button class="btn purple" data-a="ok">${bic('dust')}Распылить ${list.length > 1 ? '×' + list.length : ''}</button></div></div>`;
   };
   const md = modal(view(), { cls: 'dustmd' });
@@ -398,12 +398,12 @@ async function marketScreen() {
   const nf = (fr ? 1 : 0) + (fg != null ? 1 : 0);
   app.innerHTML = frame(`<div class="content"><div class="title"><h1 class="tx">Рынок</h1></div>
     <div class="row center" style="margin-bottom:10px"><button class="chip ${mode === 'mine' ? 'on' : ''}" data-m="mine">Мои ордера</button><button class="chip ${mode === 'buy' ? 'on' : ''}" data-m="buy">Купить</button></div>
-    <div class="parch small mknote"><b>Продай свою карту за самоцветы.</b> Открой рюкзак, выбери лишнюю карту, нажми «Продать» и назначь цену. Самоцветы придут, как только карту купят. Комиссии нет, снять лот можно в любой момент.</div><div class="mkact"><button class="btn sm green mksell" data-go="bag">${bic('sell')}Выставить карту</button></div>
     ${mode === 'buy' ? `<div class="msearch"><input id="mq" type="search" placeholder="Поиск башни…" value="${esc(S.mkQ || '')}" autocomplete="off" enterkeyhint="search"><button class="filt ${nf ? 'on' : ''}" id="mf" aria-label="Фильтры"><svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z" fill="currentColor" stroke="#14193a" stroke-width="1.8" stroke-linejoin="round"/></svg>${nf ? `<i>${nf}</i>` : ''}</button></div>
       <div class="fdrop" id="fd" hidden>
         <div class="fl">Редкость</div><div class="chips wrap">${[null, ...RARITY_ORDER].map(r => `<button class="chip ${fr === r ? 'on' : ''}" data-r="${r ?? ''}">${r ? `<i style="background:${RARITIES[r].color}"></i>${RARITIES[r].name}` : 'Все'}</button>`).join('')}</div>
         <div class="fl">Качество</div><div class="chips wrap">${[null, 0, 1, 2].map(g => `<button class="chip ${fg === g ? 'on' : ''}" data-g="${g ?? ''}">${g == null ? 'Все' : gradeStars(g)}</button>`).join('')}</div></div>` : ''}
-    <div class="grid lots" id="lots"><div class="tx small dim">Загрузка…</div></div></div>`);
+    <div class="grid lots" id="lots"><div class="tx small dim">Загрузка…</div></div>
+    <div class="hint mkhint"><div class="parch small mknote"><b>Продай свою карту за самоцветы.</b> Открой рюкзак, выбери лишнюю карту, нажми «Продать» и назначь цену. Самоцветы придут, как только карту купят. Комиссии нет, снять лот можно в любой момент.</div><div class="mkact"><button class="btn sm green mksell" data-go="bag">${bic('sell')}Выставить карту</button></div></div></div>`);
   bindCommon(app);
   app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { S.mkMode = b.dataset.m; render(); });
   const box = $('#lots');
@@ -598,7 +598,7 @@ function chestsModal() {
     <div class="shopgrid">${kinds.map(k => `<div class="offer"><span class="cnt tx">×${m.chests?.[k] || 0}</span><img class="pic" src="${uiImg('chest_' + k)}" alt=""><div class="tx small">${CHESTS[k].name}</div>
       ${(m.boosters?.chestluck || m.boosters?.['luck_' + k]) ? `<div class="tx small" style="color:#7dff6a">Удача ×${k === 'weekly' ? '1,75' : '1,5'} (${(m.boosters.chestluck || 0) + (m.boosters['luck_' + k] || 0)})</div>` : ''}
       <button class="btn sm green" data-open="${k}" ${(m.chests?.[k] || 0) ? '' : 'disabled'}>${bic('open')}Открыть</button></div>`).join('')}</div>
-    <div class="parch small">В каждом сундуке — карта. Редкая: ~5% (${(m.pity?.p4 ?? 0) >= 9 ? 'в следующем — точно' : `гарантия через ${10 - (m.pity?.p4 ?? 0)}`}). Легендарная или мистическая: ~0,6%, шанс растёт с 74-го сундука, гарантия через ${90 - (m.pity?.p5 ?? 0)}${m.pity?.g5 ? ' — и это будет мистическая' : ''}. Счётчик общий для всех сундуков и не сгорает. Бустеры удачи удваивают шансы.</div></div>`);
+    <div class="parch small hint">В каждом сундуке — карта. Редкая: ~5% (${(m.pity?.p4 ?? 0) >= 9 ? 'в следующем — точно' : `гарантия через ${10 - (m.pity?.p4 ?? 0)}`}). Легендарная или мистическая: ~0,6%, шанс растёт с 74-го сундука, гарантия через ${90 - (m.pity?.p5 ?? 0)}${m.pity?.g5 ? ' — и это будет мистическая' : ''}. Счётчик общий для всех сундуков и не сгорает. Бустеры удачи удваивают шансы.</div></div>`);
   md.el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { md.close(); openChestKind(b.dataset.open); });
 }
 async function openChestKind(k) {
@@ -620,7 +620,7 @@ function weekClock(ends) { const ms = Math.max(0, new Date(ends) - Date.now()), 
 async function rankScreen() {
   app.innerHTML = frame(`<div class="content tourney"><div class="title"><h1 class="tx">Турнир недели</h1></div>
     <div class="tn-cd"><span>Итоги через</span><div class="tn-clock" id="tnc">…</div></div>
-    <div class="parch small tn-note">Очки недели — сумма лучших результатов по уровням кампании за эту неделю. В понедельник 00:00 UTC таблица обнуляется, призы приходят сами.</div>
+    <div class="parch small tn-note hint">Очки недели — сумма лучших результатов по уровням кампании за эту неделю. В понедельник 00:00 UTC таблица обнуляется, призы приходят сами.</div>
     <div class="peds">${[2, 1, 3].map(p => { const z = WEEK_PRIZE[p], [ck, cn] = Object.entries(z.chests)[0];
       return `<div class="ped p${p}"><img class="ped-img" src="img/ui/kit6/ped_${p}.webp?v=1" alt=""><img class="ped-beam" src="img/ui/kit6/beam.webp?v=1" alt="">
         <div class="ped-top"><img class="ped-rays" src="img/ui/kit6/rays.webp?v=1" alt=""><img class="ped-chest" src="${uiImg('chest_' + ck)}" alt="">${cn > 1 ? `<b class="ped-x num">×${cn}</b>` : ''}</div>
@@ -718,7 +718,9 @@ function settingsModal() {
     <div class="row"><div class="tx grow">Звук</div><button class="toggle ${S.settings.sound ? 'on' : ''}" id="snd"></button></div>
     <div class="row"><div class="tx grow">Язык</div><button class="langbtn" id="lng" translate="no">${(LANGS.find(l => l[0] === curLang) || LANGS[0]).slice(1).reverse().join(' ')}</button></div>
     <div class="tx small dim setsec">Бой</div>
-    ${[['dmg', 'Цифры урона'], ['bounty', 'Мана за убийство'], ['hp', 'Полоски здоровья'], ['words', 'Надписи эффектов («КРИТ», «ЯРОСТЬ!»)']].map(([k, t]) => `<div class="row"><div class="tx grow">${t}</div><button class="toggle ${S.settings[k] !== false ? 'on' : ''}" data-v="${k}"></button></div>`).join('')}</div>`);
+    ${[['dmg', 'Цифры урона'], ['bounty', 'Мана за убийство'], ['hp', 'Полоски здоровья'], ['words', 'Надписи эффектов («КРИТ», «ЯРОСТЬ!»)']].map(([k, t]) => `<div class="row"><div class="tx grow">${t}</div><button class="toggle ${S.settings[k] !== false ? 'on' : ''}" data-v="${k}"></button></div>`).join('')}
+    <div class="tx small dim setsec">Интерфейс</div>
+    <div class="row"><div class="tx grow">Подсказки на экранах</div><button class="toggle ${S.settings.hints !== false ? 'on' : ''}" data-v="hints"></button></div></div>`);
   md.el.querySelectorAll('[data-v]').forEach(b => b.onclick = e => { const k = b.dataset.v; S.settings[k] = S.settings[k] === false; e.currentTarget.classList.toggle('on', S.settings[k] !== false); saveSettings(); });
   md.el.querySelector('#snd').onclick = e => { S.settings.sound = !S.settings.sound; e.currentTarget.classList.toggle('on', S.settings.sound); saveSettings(); };
   md.el.querySelector('#lng').onclick = () => {          // список языков; выбор перезагружает игру

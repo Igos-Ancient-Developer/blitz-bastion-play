@@ -1,7 +1,7 @@
 // Воронка новичка (как в Baalgor, blood-keep/js/track.js): отметка «открыл игру» с меткой ?startapp=… грузится отдельным модулем
 // раньше main.js — так в отчёт попадают и те, кто закрыл игру, не дождавшись загрузки. Шаги и отчёты — supabase/blitz_funnel.sql.
 // Только в Telegram (нужна подпись initData). Каждый шаг уходит на сервер один раз за запуск игры; сервер считает повторы.
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261111200246';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261111201213';
 
 const TG = window.Telegram?.WebApp;
 const init = TG?.initData || '';
