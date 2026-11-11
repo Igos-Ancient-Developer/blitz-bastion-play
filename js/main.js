@@ -1,16 +1,16 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111112641';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111112641';
-import { Api, errText, inTelegram } from './api.js?v=20261111112641';
-import { Battle, VIEW } from './battle.js?v=20261111112641';
-import { PAYIC } from './payic.js?v=20261111112641';
-import { openChest } from './chest3d.js?v=20261111112641';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111112641';
-import { Sfx } from './audio.js?v=20261111112641';
-import { Ads } from './ads.js?v=20261111112641';
-import { PAY } from './config.js?v=20261111112641';
-import { placeText, pyramidSvg } from './place.js?v=20261111112641';
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111112641';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111113128';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111113128';
+import { Api, errText, inTelegram } from './api.js?v=20261111113128';
+import { Battle, VIEW } from './battle.js?v=20261111113128';
+import { PAYIC } from './payic.js?v=20261111113128';
+import { openChest } from './chest3d.js?v=20261111113128';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111113128';
+import { Sfx } from './audio.js?v=20261111113128';
+import { Ads } from './ads.js?v=20261111113128';
+import { PAY } from './config.js?v=20261111113128';
+import { placeText, pyramidSvg } from './place.js?v=20261111113128';
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111113128';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -20,9 +20,25 @@ const TABS = [['shop', 'Магазин', 'ic_shop'], ['bag', 'Рюкзак', 'ic
 function loadSettings() { try { return { sound: true, ...JSON.parse(localStorage.getItem('bb_settings') || '{}') }; } catch { return { sound: true }; } }
 function saveSettings() { try { localStorage.setItem('bb_settings', JSON.stringify(S.settings)); } catch {} Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false; }
 
+// Полный экран в Telegram (как в Baalgor, blood-keep/js/tg.js): сразу на весь экран и отступы под кнопки Telegram сверху
+// (safeAreaInset + contentSafeAreaInset → --safe-top/--safe-bot; вне Telegram остаются env() из style.css).
+function tgFullscreen() {
+  const v = x => { try { return TG.isVersionAtLeast?.(x); } catch { return false; } };
+  try { if (v('8.0') && TG.requestFullscreen && !TG.isFullscreen) TG.requestFullscreen(); } catch {}
+  try { if (v('8.0')) TG.lockOrientation?.(); } catch {}
+  try { TG.setBottomBarColor?.('#2f6db8'); } catch {}
+  const apply = () => {
+    const s = TG.safeAreaInset || {}, c = TG.contentSafeAreaInset || {}, st = document.documentElement.style;
+    const top = (s.top || 0) + (c.top || 0), bot = (s.bottom || 0) + (c.bottom || 0);
+    if (top || TG.isFullscreen) st.setProperty('--safe-top', top + 'px');
+    if (bot) st.setProperty('--safe-bot', bot + 'px');
+  };
+  apply();
+  for (const ev of ['safeAreaChanged', 'contentSafeAreaChanged', 'fullscreenChanged', 'viewportChanged']) { try { TG.onEvent(ev, apply); } catch {} }
+}
 // ───────── загрузка ─────────
 async function boot() {
-  if (TG) { TG.ready(); TG.expand(); TG.disableVerticalSwipes?.(); TG.setHeaderColor?.('#2f6db8'); TG.setBackgroundColor?.('#2f6db8'); }
+  if (TG) { TG.ready(); TG.expand(); TG.disableVerticalSwipes?.(); TG.setHeaderColor?.('#2f6db8'); TG.setBackgroundColor?.('#2f6db8'); tgFullscreen(); }
   Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false;
   press(document.body);
   // картинка ещё не сгенерирована — прячем, а не показываем системный «битый» значок
