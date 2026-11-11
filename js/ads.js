@@ -2,7 +2,7 @@
 // SDK грузится только при первом показе. Вне Telegram и без номера блока окно рекламы не показывается.
 // show(kind) → 'done' (досмотрел) | 'skip' (закрыл раньше) | 'none' (рекламы сейчас нет) | 'error'.
 // Награду начисляет сервер: AdsGram сам сообщает о просмотре (Reward URL → bb-ad-reward), игра лишь забирает её (bb_ad_claim).
-import { ADS } from './config.js?v=20261111113128';
+import { ADS } from './config.js?v=20261111144802';
 
 const tg = window.Telegram && window.Telegram.WebApp;
 const SDK = 'https://sad.adsgram.ai/js/sad.min.js';

@@ -1,7 +1,8 @@
 // Общие элементы интерфейса: карточка башни, окна, всплывашки, иконки.
-import { TOWER_DEFS, RARITIES, CARD_LV_MULT, GRADES, combosOf } from './data.js?v=20261111113128';
-import { cardImg, uiImg } from './sprites.js?v=20261111113128';
-import { Sfx } from './audio.js?v=20261111113128';
+import { TOWER_DEFS, RARITIES, CARD_LV_MULT, GRADES, combosOf } from './data.js?v=20261111144802';
+import { cardImg, uiImg } from './sprites.js?v=20261111144802';
+import { Sfx } from './audio.js?v=20261111144802';
+import { tr } from './i18n.js?v=20261111144802';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
@@ -109,7 +110,7 @@ export function cardHTML(cardId, { lvl = 1, grade = 0, count = 0, mini = false, 
       <div class="desc">${esc(d.desc)}</div>
       ${combos.length ? `<div class="sep"></div><div class="combo">${cb}</div>` : ''}
     </div></div>
-    <div class="name" style="--nl:${d.name.length}"><span>${esc(d.name)}</span></div>
+    <div class="name" style="--nl:${tr(d.name).length}"><span>${esc(d.name)}</span></div>
   </div>`;
 }
 

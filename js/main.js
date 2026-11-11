@@ -1,16 +1,17 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111113128';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111113128';
-import { Api, errText, inTelegram } from './api.js?v=20261111113128';
-import { Battle, VIEW } from './battle.js?v=20261111113128';
-import { PAYIC } from './payic.js?v=20261111113128';
-import { openChest } from './chest3d.js?v=20261111113128';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111113128';
-import { Sfx } from './audio.js?v=20261111113128';
-import { Ads } from './ads.js?v=20261111113128';
-import { PAY } from './config.js?v=20261111113128';
-import { placeText, pyramidSvg } from './place.js?v=20261111113128';
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111113128';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111144802';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111144802';
+import { Api, errText, inTelegram } from './api.js?v=20261111144802';
+import { Battle, VIEW } from './battle.js?v=20261111144802';
+import { PAYIC } from './payic.js?v=20261111144802';
+import { openChest } from './chest3d.js?v=20261111144802';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111144802';
+import { Sfx } from './audio.js?v=20261111144802';
+import { Ads } from './ads.js?v=20261111144802';
+import { PAY } from './config.js?v=20261111144802';
+import { placeText, pyramidSvg } from './place.js?v=20261111144802';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111144802';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111144802';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -38,6 +39,7 @@ function tgFullscreen() {
 }
 // ───────── загрузка ─────────
 async function boot() {
+  await initLang(pickLang());                                                   // язык интерфейса: до построения экранов
   if (TG) { TG.ready(); TG.expand(); TG.disableVerticalSwipes?.(); TG.setHeaderColor?.('#2f6db8'); TG.setBackgroundColor?.('#2f6db8'); tgFullscreen(); }
   Sfx.on = S.settings.sound; for (const k of ['dmg', 'bounty', 'hp', 'words']) VIEW[k] = S.settings[k] !== false;
   press(document.body);
@@ -70,7 +72,7 @@ async function act(promise, okText) {
 }
 
 // ───────── каркас экрана ─────────
-function avaHTML(m) { return m.avatar ? `<img src="${esc(m.avatar)}" alt="">` : esc((m.name || '?')[0]); }
+function avaHTML(m) { return m.avatar ? `<img src="${esc(m.avatar)}" alt="">` : esc((tr(m.name) || '?')[0]); }
 function topbar() {
   const m = S.me;
   return `<div class="topbar">
@@ -194,7 +196,7 @@ function deckCards() { const byId = Object.fromEntries(S.me.cards.map(c => [c.id
 // превью карты: арт, имя, мана и параметры значками — без текста (колода, рука в бою)
 function previewHTML(c) {
   const d = TOWER_DEFS[c.card];
-  return `<div class="pv r-${d.rarity}"><img src="${cardImg(c.card)}" alt="" loading="lazy"><span class="pvc num">${RARITIES[d.rarity].cost}</span>${gradeStars(c.grade || 0)}<b class="pvn" style="--nl:${d.name.length}">${esc(d.name)}</b></div>`;
+  return `<div class="pv r-${d.rarity}"><img src="${cardImg(c.card)}" alt="" loading="lazy"><span class="pvc num">${RARITIES[d.rarity].cost}</span>${gradeStars(c.grade || 0)}<b class="pvn" style="--nl:${tr(d.name).length}">${esc(d.name)}</b></div>`;
 }
 // Колода перед боем: слоты сверху (касание — убрать), коллекция снизу (касание — добавить), «Отмена» ничего не меняет
 function deckModal(L) {
@@ -680,10 +682,16 @@ function skillsScreen() {
 function settingsModal() {
   const md = modal(`<div class="panel col"><div class="center"><div class="ribbon tx">Настройки</div></div>
     <div class="row"><div class="tx grow">Звук</div><button class="toggle ${S.settings.sound ? 'on' : ''}" id="snd"></button></div>
+    <div class="row"><div class="tx grow">Язык</div><button class="langbtn" id="lng" translate="no">${(LANGS.find(l => l[0] === curLang) || LANGS[0]).slice(1).reverse().join(' ')}</button></div>
     <div class="tx small dim setsec">Бой</div>
     ${[['dmg', 'Цифры урона'], ['bounty', 'Мана за убийство'], ['hp', 'Полоски здоровья'], ['words', 'Надписи эффектов («КРИТ», «ЯРОСТЬ!»)']].map(([k, t]) => `<div class="row"><div class="tx grow">${t}</div><button class="toggle ${S.settings[k] !== false ? 'on' : ''}" data-v="${k}"></button></div>`).join('')}</div>`);
   md.el.querySelectorAll('[data-v]').forEach(b => b.onclick = e => { const k = b.dataset.v; S.settings[k] = S.settings[k] === false; e.currentTarget.classList.toggle('on', S.settings[k] !== false); saveSettings(); });
   md.el.querySelector('#snd').onclick = e => { S.settings.sound = !S.settings.sound; e.currentTarget.classList.toggle('on', S.settings.sound); saveSettings(); };
+  md.el.querySelector('#lng').onclick = () => {          // список языков; выбор перезагружает игру
+    md.close();
+    const lm = modal(`<div class="panel col"><div class="center"><div class="ribbon tx">Язык</div></div><div class="langlist" translate="no">${LANGS.map(([c, n, f]) => `<button class="langopt ${c === curLang ? 'on' : ''}" data-l="${c}"><span>${f}</span><b>${n}</b></button>`).join('')}</div></div>`);
+    lm.el.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { Sfx.play('click'); if (b.dataset.l === curLang) lm.close(); else setLang(b.dataset.l); });
+  };
 }
 
 // ───────── бой ─────────

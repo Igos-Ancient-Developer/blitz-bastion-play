@@ -4,10 +4,11 @@
 // (башни, монстры, деревья, снаряды) рисуется без сжатия в точке проекции своей опоры: экранный y = y·K − высота.
 // Анимации: монстры — лист 4×4 (вниз, вверх, вправо/зеркально влево, смерть); башни — 8 направлений (dir8)
 // с точками ствола из img/meta.json или 4 кадра атаки (act4). Смерть врага зависит от башни, которая его добила.
-import { TOWER_DEFS, ENEMY_DEFS, RARITIES, BATTLE, COMBOS, CARD_LV_MULT, FIELD_UP, GRADES } from './data.js?v=20261111113128';
-import { COLS, ROWS, genWaves, pathCells, obstacleCells } from './levels.js?v=20261111113128';
-import { towerImg, enemyImg, decorImg, ok, META, img, uiImg, fxImg } from './sprites.js?v=20261111113128';
-import { Sfx } from './audio.js?v=20261111113128';
+import { TOWER_DEFS, ENEMY_DEFS, RARITIES, BATTLE, COMBOS, CARD_LV_MULT, FIELD_UP, GRADES } from './data.js?v=20261111144802';
+import { COLS, ROWS, genWaves, pathCells, obstacleCells } from './levels.js?v=20261111144802';
+import { towerImg, enemyImg, decorImg, ok, META, img, uiImg, fxImg } from './sprites.js?v=20261111144802';
+import { Sfx } from './audio.js?v=20261111144802';
+import { tr } from './i18n.js?v=20261111144802';
 
 const FIELD_H = ROWS + 1.1;
 // мир вокруг поля: лес по бокам, полоса сверху, замок снизу; плато обрывается скалой к воде
@@ -709,7 +710,7 @@ export class Battle {
   shards(x, y) { for (let i = 0; i < 12; i++) { const a = rand(0, TAU), v = rand(2, 5); this.fx.push({ kind: 'shard', x, y: y - 0.4, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, grav: 10, t: 0, life: rand(0.5, 0.8), rot: rand(0, 6), vr: rand(-10, 10), r: rand(0.08, 0.16) }); } Sfx.play('ice'); }
   confetti(x, y) { const C = ['#ff7ac8', '#ffd23f', '#7df9ff', '#8dff5a', '#ff5d5d']; for (let i = 0; i < 26; i++) { const a = rand(0, TAU), v = rand(2, 6); this.fx.push({ kind: 'conf', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3, grav: 7, t: 0, life: rand(0.6, 1.1), c: C[i % 5], rot: rand(0, 6), vr: rand(-12, 12) }); } }
   burst(x, y, c, n = 8, v = 4) { for (let i = 0; i < n; i++) { const a = rand(0, TAU), s = rand(0.3, 1) * v; this.fx.push({ kind: 'dot', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2, t: 0, life: rand(0.3, 0.6), c, r: rand(0.05, 0.11) }); } }
-  floatText(x, y, s, c = '#fff', size = 0.45, big = false, kind = 'words') { if (!VIEW[kind]) return; this.texts.push({ x, y, s: String(s), c, size: size * 0.78, t: 0, life: big ? 1 : 0.8, big }); }
+  floatText(x, y, s, c = '#fff', size = 0.45, big = false, kind = 'words') { if (!VIEW[kind]) return; this.texts.push({ x, y, s: tr(String(s)), c, size: size * 0.78, t: 0, life: big ? 1 : 0.8, big }); }
   banner(s, c = '#fff') { this.onToast(s, c); }
 
   // ───────── действия игрока ─────────
@@ -1158,7 +1159,7 @@ export class Battle {
     } else {
       g.fillStyle = R.color; g.strokeStyle = '#14193a'; g.lineWidth = C * 0.06;
       rr(g, -S * 0.28, -S * 0.6, S * 0.56, S * 0.56, S * 0.12); g.fill(); g.stroke();
-      g.fillStyle = '#fff'; g.font = `900 ${S * 0.24}px Rubik`; g.textAlign = 'center'; g.fillText(t.def.name[0], 0, -S * 0.25);
+      g.fillStyle = '#fff'; g.font = `900 ${S * 0.24}px Rubik`; g.textAlign = 'center'; g.fillText(tr(t.def.name)[0], 0, -S * 0.25);
       g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, -S * 0.4); g.lineTo(Math.cos(t.face) * S * 0.35, -S * 0.4 + Math.sin(t.face) * S * 0.25); g.stroke();
     }
     g.restore();
