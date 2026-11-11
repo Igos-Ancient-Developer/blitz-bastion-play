@@ -1,18 +1,18 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111151953';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111151953';
-import { Api, errText, inTelegram } from './api.js?v=20261111151953';
-import { Battle, VIEW } from './battle.js?v=20261111151953';
-import { PAYIC } from './payic.js?v=20261111151953';
-import { openChest } from './chest3d.js?v=20261111151953';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111151953';
-import { Sfx } from './audio.js?v=20261111151953';
-import { Ads } from './ads.js?v=20261111151953';
-import { step } from './track.js?v=20261111151953';                                             // воронка новичка: supabase/blitz_funnel.sql
-import { PAY, SUPABASE_URL } from './config.js?v=20261111151953';
-import { placeText, pyramidSvg } from './place.js?v=20261111151953';
-import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111151953';   // язык — по Telegram/браузеру, сменить — в настройках
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111151953';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111200246';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111200246';
+import { Api, errText, inTelegram } from './api.js?v=20261111200246';
+import { Battle, VIEW } from './battle.js?v=20261111200246';
+import { PAYIC } from './payic.js?v=20261111200246';
+import { openChest } from './chest3d.js?v=20261111200246';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111200246';
+import { Sfx } from './audio.js?v=20261111200246';
+import { Ads } from './ads.js?v=20261111200246';
+import { step } from './track.js?v=20261111200246';                                             // воронка новичка: supabase/blitz_funnel.sql
+import { PAY, SUPABASE_URL } from './config.js?v=20261111200246';
+import { placeText, pyramidSvg } from './place.js?v=20261111200246';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111200246';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111200246';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -398,6 +398,7 @@ async function marketScreen() {
   const nf = (fr ? 1 : 0) + (fg != null ? 1 : 0);
   app.innerHTML = frame(`<div class="content"><div class="title"><h1 class="tx">Рынок</h1></div>
     <div class="row center" style="margin-bottom:10px"><button class="chip ${mode === 'mine' ? 'on' : ''}" data-m="mine">Мои ордера</button><button class="chip ${mode === 'buy' ? 'on' : ''}" data-m="buy">Купить</button></div>
+    <div class="parch small mknote"><b>Продай свою карту за самоцветы.</b> Открой рюкзак, выбери лишнюю карту, нажми «Продать» и назначь цену. Самоцветы придут, как только карту купят. Комиссии нет, снять лот можно в любой момент.</div><div class="mkact"><button class="btn sm green mksell" data-go="bag">${bic('sell')}Выставить карту</button></div>
     ${mode === 'buy' ? `<div class="msearch"><input id="mq" type="search" placeholder="Поиск башни…" value="${esc(S.mkQ || '')}" autocomplete="off" enterkeyhint="search"><button class="filt ${nf ? 'on' : ''}" id="mf" aria-label="Фильтры"><svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z" fill="currentColor" stroke="#14193a" stroke-width="1.8" stroke-linejoin="round"/></svg>${nf ? `<i>${nf}</i>` : ''}</button></div>
       <div class="fdrop" id="fd" hidden>
         <div class="fl">Редкость</div><div class="chips wrap">${[null, ...RARITY_ORDER].map(r => `<button class="chip ${fr === r ? 'on' : ''}" data-r="${r ?? ''}">${r ? `<i style="background:${RARITIES[r].color}"></i>${RARITIES[r].name}` : 'Все'}</button>`).join('')}</div>

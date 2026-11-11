@@ -1543,3 +1543,8 @@ html.lang-hi .tx, html.lang-zh .tx, html.lang-ja .tx { letter-spacing: 0; }
 .payrow.busy { opacity: .6; pointer-events: none; }
 .payrow.busy .pp { animation: paywait .8s ease-in-out infinite alternate; }
 @keyframes paywait { from { opacity: .3 } to { opacity: 1 } }
+
+/* рынок: плашка о продаже */
+.mknote { margin: 0 0 10px; text-align: center; }
+.mknote { margin-bottom: 6px; }
+.mkact { display: flex; justify-content: center; margin: 0 0 10px; }

@@ -38,7 +38,7 @@ export async function initLang(code) {
   lang = code; document.documentElement.lang = code; document.documentElement.classList.add('lang-' + code);
   if (RTL.includes(code)) document.documentElement.classList.add('rtl');
   if (code === 'ru') return;
-  let dict; try { dict = (await import(`./lang/${code}.js?v=20261111151953`)).default; } catch { lang = 'ru'; return; }
+  let dict; try { dict = (await import(`./lang/${code}.js?v=20261111200246`)).default; } catch { lang = 'ru'; return; }
   exact = new Map();
   const pieces = [];
   for (const [k, v] of Object.entries(dict)) {
