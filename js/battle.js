@@ -4,11 +4,11 @@
 // (башни, монстры, деревья, снаряды) рисуется без сжатия в точке проекции своей опоры: экранный y = y·K − высота.
 // Анимации: монстры — лист 4×4 (вниз, вверх, вправо/зеркально влево, смерть); башни — 8 направлений (dir8)
 // с точками ствола из img/meta.json или 4 кадра атаки (act4). Смерть врага зависит от башни, которая его добила.
-import { TOWER_DEFS, ENEMY_DEFS, RARITIES, BATTLE, COMBOS, CARD_LV_MULT, FIELD_UP, GRADES } from './data.js?v=20261111201213';
-import { COLS, ROWS, genWaves, pathCells, obstacleCells } from './levels.js?v=20261111201213';
-import { towerImg, enemyImg, decorImg, ok, META, img, uiImg, fxImg } from './sprites.js?v=20261111201213';
-import { Sfx } from './audio.js?v=20261111201213';
-import { tr } from './i18n.js?v=20261111201213';
+import { TOWER_DEFS, ENEMY_DEFS, RARITIES, BATTLE, COMBOS, CARD_LV_MULT, FIELD_UP, GRADES } from './data.js?v=20261111201705';
+import { COLS, ROWS, genWaves, pathCells, obstacleCells } from './levels.js?v=20261111201705';
+import { towerImg, enemyImg, decorImg, ok, META, img, uiImg, fxImg } from './sprites.js?v=20261111201705';
+import { Sfx } from './audio.js?v=20261111201705';
+import { tr } from './i18n.js?v=20261111201705';
 
 const FIELD_H = ROWS + 1.1;
 // мир вокруг поля: лес по бокам, полоса сверху, замок снизу; плато обрывается скалой к воде
