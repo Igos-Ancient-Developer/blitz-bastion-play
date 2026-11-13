@@ -1,6 +1,6 @@
 // Связь с сервером: функции bb_* в Supabase (supabase/blitz.sql).
 // В Telegram игрок определяется подписью initData, вне Telegram — анонимной сессией Supabase Auth (токены в localStorage).
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261111201705';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js?v=20261113142822';
 
 const TG = window.Telegram?.WebApp;
 export const initData = TG?.initData || '';
@@ -52,6 +52,7 @@ export const Api = {
   useBoost: (id) => rpc('bb_use_boost', { ...P(), p_id: id }),
   buy: (item, n = 1) => rpc('bb_buy', { ...P(), p_item: item, p_n: n }),
   daily: () => rpc('bb_daily', P()),
+  channel: () => rpc('bb_channel_claim', P()),                      // награда за подписку на канал (supabase/blitz_channel.sql)
   finish: (level, win, score, stats) => rpc('bb_finish', { ...P(), p_level: String(level), p_win: win, p_score: score, p_stats: stats }),
   market: (rarity = null, card = null, sort = 'new') => rpc('bb_market', { p_rarity: rarity, p_card: card, p_sort: sort }),
   marketStats: card => rpc('bb_market_stats', { p_card: card }),

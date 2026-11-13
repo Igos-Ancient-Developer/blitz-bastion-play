@@ -1550,3 +1550,10 @@ html.lang-hi .tx, html.lang-zh .tx, html.lang-ja .tx { letter-spacing: 0; }
 .mkact { display: flex; justify-content: center; margin: 0 0 10px; }
 .mkhint { margin-top: 14px; }
 .nohints .hint { display: none !important; }
+/* значок «Канал» на главном (награда за подписку, js/main.js channelModal) — под «Навыками» */
+.chchip { position: absolute; left: 10px; top: 140px; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px 5px; border-radius: 14px;
+  background: linear-gradient(#3aa0ff, #1f6fd6); border: 2px solid #1b0f06; box-shadow: 0 3px 0 #0d3a7a; color: #fff; animation: bump 1.6s infinite; }
+.chchip .chi { font-size: 26px; line-height: 30px; } .chchip .tx { font-size: 11px; -webkit-text-stroke: 0; }
+.chchip .badge { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: #ff3b5c; color: #fff; font: 900 12px/20px Rubik, sans-serif; text-align: center; border: 2px solid #1b0f06; }
+.chbig { font-size: 64px; line-height: 1; margin: 4px auto; }
+.chgift { gap: 16px; margin: 6px 0 10px; } .chg { display: flex; align-items: center; gap: 6px; } .chg img { width: 44px; height: 44px; object-fit: contain; } .chg b { font-size: 22px; color: #fff; }

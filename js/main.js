@@ -1,18 +1,18 @@
 // Приложение: загрузка, экраны меню, бой. Все данные игрока — на сервере (js/api.js), здесь только показ и вызовы.
-import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261111201705';
-import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261111201705';
-import { Api, errText, inTelegram } from './api.js?v=20261111201705';
-import { Battle, VIEW } from './battle.js?v=20261111201705';
-import { PAYIC } from './payic.js?v=20261111201705';
-import { openChest } from './chest3d.js?v=20261111201705';
-import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261111201705';
-import { Sfx } from './audio.js?v=20261111201705';
-import { Ads } from './ads.js?v=20261111201705';
-import { step } from './track.js?v=20261111201705';                                             // воронка новичка: supabase/blitz_funnel.sql
-import { PAY, SUPABASE_URL } from './config.js?v=20261111201705';
-import { placeText, pyramidSvg } from './place.js?v=20261111201705';
-import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261111201705';   // язык — по Telegram/браузеру, сменить — в настройках
-import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261111201705';
+import { TOWER_DEFS, RARITIES, RARITY_ORDER, SKILLS, BRANCHES, CHESTS, BOOSTERS, PACKS, PACK_USD, STARTER, CARD_UP_COST, CARD_MAX_LV, MARKET_FEE, BATTLE, ENEMY_DEFS, GRADES, dustValue, dustOdds, combosOf } from './data.js?v=20261113142822';
+import { LEVELS, WORLDS, weeklyLevel, weeklyLeft, genWaves } from './levels.js?v=20261113142822';
+import { Api, errText, inTelegram } from './api.js?v=20261113142822';
+import { Battle, VIEW } from './battle.js?v=20261113142822';
+import { PAYIC } from './payic.js?v=20261113142822';
+import { openChest } from './chest3d.js?v=20261113142822';
+import { loadMeta, preload, uiImg, cardImg, META, fxSrcs } from './sprites.js?v=20261113142822';
+import { Sfx } from './audio.js?v=20261113142822';
+import { Ads } from './ads.js?v=20261113142822';
+import { step } from './track.js?v=20261113142822';                                             // воронка новичка: supabase/blitz_funnel.sql
+import { PAY, SUPABASE_URL } from './config.js?v=20261113142822';
+import { placeText, pyramidSvg } from './place.js?v=20261113142822';
+import { initLang, pickLang, setLang, LANGS, lang as curLang, tr } from './i18n.js?v=20261113142822';   // язык — по Telegram/браузеру, сменить — в настройках
+import { $, h, esc, fmt, fmtShort, ic, bic, cardHTML, gradeStars, traitsHTML, STAT_ICONS, snap, tilt, modal, toast, note, confirmBox, press } from './ui.js?v=20261113142822';
 
 const TG = window.Telegram?.WebApp;
 const app = $('#app');
@@ -116,6 +116,7 @@ function homeScreen() {
   app.innerHTML = frame(`<div class="content home">
     <button class="weekchip" id="weekly"><img src="${uiImg('chest_weekly')}" alt=""><span class="tx small">${m.weeklyDone ? 'Готово' : `${wd}д ${wh}ч`}</span></button>
     <button class="skchip${m.sp ? ' has' : ''}" data-go="skills"><span class="ski">${ic('ic_skill')}</span><span class="tx small">Навыки</span>${m.sp ? `<span class="badge static num">${m.sp}</span>` : ''}</button>
+    ${inTelegram && !m.channelDone ? `<button class="chchip" id="chan"><span class="chi">📣</span><span class="tx small">Канал</span><span class="badge static num">+</span></button>` : ''}
     <img class="logo" src="${uiImg('logo')}" alt="" onerror="this.outerHTML='<div class=&quot;tx logo-text&quot;>BLITZ<br>BASTION</div>'">
     ${buffsHTML() ? `<div class="buffs">${buffsHTML()}</div>` : ''}
     <div class="homebot">
@@ -126,6 +127,27 @@ function homeScreen() {
   bindCommon(app);
   $('#play').onclick = () => levelSheet(L);
   $('#weekly').onclick = () => levelSheet(weeklyLevel());
+  const ch = $('#chan'); if (ch) ch.onclick = channelModal;
+}
+
+// ───────── награда за подписку на канал игры (как в Grave Pot Looter): один раз, проверка на сервере ─────────
+const CHANNEL = 'blitzbastion';
+function channelModal() {
+  step('ch_view');
+  const md = modal(`<div class="panel col center"><div class="ribbon tx">Канал игры</div>
+    <div class="chbig">📣</div>
+    <div class="parch center">Новости, испытание недели и новые башни — в нашем Telegram-канале. Подпишись и получи награду:</div>
+    <div class="row center chgift"><span class="chg"><img src="${uiImg('ic_prism')}" alt=""><b class="num">20</b></span><span class="chg"><img src="${uiImg('chest_magic')}" alt=""><b class="num">1</b></span></div>
+    <div class="row center"><button class="btn blue" id="chgo">Подписаться</button><button class="btn green" id="chck">${bic('continue')}Проверить</button></div></div>`);
+  md.el.querySelector('#chgo').onclick = () => { step('ch_open'); openTg(CHANNEL); };
+  md.el.querySelector('#chck').onclick = async e => {
+    step('ch_check'); const b = e.currentTarget; if (b.disabled) return; b.disabled = true;
+    const r = await Api.channel(); b.disabled = false;
+    if (r?.error === 'not_member') return note('Сначала подпишись на канал');
+    if (r?.error === 'done') { S.me.channelDone = true; md.close(); render(); return note('Награда уже получена'); }
+    if (!r || r.error || !r.ok) return note(errText(r?.error || 'network'));
+    setMe(r); md.close(); render(); Sfx.play('upgrade'); toast('Награда получена!', '#7dff6a');
+  };
 }
 
 // ───────── карта кампании: три нарисованных региона, уровни на полянах вдоль дороги ─────────
